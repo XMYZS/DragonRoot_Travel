@@ -1,0 +1,297 @@
+/* 全局重置与基础样式 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #1e1e24;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+/* Header 样式 */
+#header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-top: 20px;
+}
+
+#header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    letter-spacing: 2px;
+}
+
+/* Quest List 容器 */
+#quest-list {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 卡片基础样式 (.card) */
+.card {
+    position: relative;
+    /* 为了给锁图标定位 */
+    background-color: #2d2d3a;
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 6px solid #5c5c79;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
+    background-color: #343442;
+}
+
+/* 内部文本样式 */
+.quest-date {
+    font-size: 0.85rem;
+    color: #8f90a2;
+    margin-bottom: 4px;
+}
+
+.quest-city {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #4db8ff;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.quest-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* --- 已完成任务样式 (.done) --- */
+.done {
+    border-left-color: #4cd964;
+    opacity: 0.6;
+}
+
+.done .quest-title {
+    text-decoration: line-through;
+    color: #aaa;
+}
+
+/* --- 锁定任务样式 (.locked) --- */
+.locked {
+    /* 背景更深，甚至接近黑色，营造未探索感 */
+    background-color: #16161a;
+    /* 边框变暗灰 */
+    border-left-color: #333;
+    /* 整体稍微透明一点 */
+    opacity: 0.8;
+    /* 鼠标变成禁止符号 */
+    cursor: not-allowed;
+    /* 文字颜色变暗 */
+    color: #777;
+}
+
+/* 锁定状态下的 hover：不要上浮，也不要变亮，保持死寂 */
+.locked:hover {
+    transform: none;
+    background-color: #16161a;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* 锁定状态下的城市和日期颜色也变暗，不再高亮 */
+.locked .quest-city,
+.locked .quest-date {
+    color: #555;
+}
+
+/* 使用伪元素添加一个锁的图标 */
+.locked::after {
+    content: "🔒";
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 1.5rem;
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+/* --- 地图导航按钮样式 --- */
+.map-btn {
+    display: inline-block;
+    background-color: #007aff;
+    /* 科技蓝 */
+    color: white;
+    text-decoration: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    /* 胶囊形状 */
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0, 122, 255, 0.3);
+}
+
+.map-btn:hover {
+    background-color: #0062cc;
+    /* 悬停变深 */
+    transform: scale(1.05);
+    /* 轻微放大 */
+}
+
+.map-btn:active {
+    transform: scale(0.95);
+    /* 点击回缩感 */
+}
+
+/* 已完成任务里的按钮也可以变灰一点，或者保持原样，这里保持原样以方便查看 */
+/* --- 调试按钮样式 --- */
+#debug-btn {
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #666;
+    padding: 5px 12px;
+    margin-top: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+/* 当调试模式开启时，按钮变亮 */
+#debug-btn.active {
+    background-color: #28a745;
+    /* 绿色 */
+    border-color: #28a745;
+    font-weight: bold;
+}
+
+/* --- 按钮容器：让地图和打卡按钮并排 --- */
+.action-buttons {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    /* 按钮之间的间距 */
+}
+
+/* --- 打卡按钮样式 --- */
+.check-btn {
+    display: inline-block;
+    background-color: #28a745;
+    /* 绿色 */
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.check-btn:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
+.check-btn:active {
+    transform: scale(0.95);
+}
+
+/* 当任务已完成时的按钮样式（变为撤销状态） */
+.check-btn.is-checked {
+    background-color: #6c757d;
+    /* 灰色 */
+    box-shadow: none;
+}
+
+/* --- 模态框 (Modal) 样式 --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    /* 深黑遮罩 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    /* 隐藏时不可点击 */
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(5px);
+    /* 背景模糊效果 */
+}
+
+/* 激活状态 */
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 内容容器 */
+.modal-content {
+    background-color: #2d2d3a;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    /* 防止内容太长溢出屏幕 */
+    overflow-y: auto;
+    /* 内容过长可滚动 */
+    padding: 25px;
+    border-radius: 16px;
+    border: 1px solid #4db8ff;
+    /* 边框高亮，更有科技感 */
+    box-shadow: 0 0 20px rgba(77, 184, 255, 0.2);
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+/* 标题和正文 */
+#modal-title {
+    color: #4db8ff;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #444;
+    padding-bottom: 10px;
+}
+
+#modal-body {
+    color: #e0e0e0;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    /* 保留换行符 */
+    font-size: 0.95rem;
+}
+
+/* 关闭按钮 */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
