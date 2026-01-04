@@ -1,297 +1,467 @@
-/* 全局重置与基础样式 */
+/* =========================================
+   1. 主题系统 (THEME SYSTEM)
+   ========================================= */
+
+/* --- 基础变量 (默认：赛博夜行) --- */
+:root {
+    --bg-page: #1e1e24;
+    --bg-card: #2d2d3a;
+    --bg-card-hover: #343442;
+    --bg-input: #1b1b20;
+    --text-main: #ffffff;
+    --text-muted: #8f90a2;
+    --text-highlight: #4db8ff;
+    --accent-primary: #4db8ff;
+    --accent-success: #4cd964;
+    --accent-warn: #ffcc00;
+    --border-color: #5c5c79;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --map-bg: #2d2d3a;
+    --map-area: #444;
+    --map-light: #4db8ff;
+}
+
+/* --- 主题 2: 日系晴空 (Light) --- */
+:root[data-theme="light"] {
+    --bg-page: #f0f2f5;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f9f9f9;
+    --bg-input: #f0f2f5;
+    --text-main: #333333;
+    --text-muted: #666666;
+    --text-highlight: #ff7eb3;
+    --accent-primary: #ff7eb3;
+    --accent-success: #6cc070;
+    --accent-warn: #ffb347;
+    --border-color: #e0e0e0;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --map-bg: #ffffff;
+    --map-area: #e0e0e0;
+    --map-light: #ff7eb3;
+}
+
+/* --- 主题 3: 黑客帝国 (Matrix) --- */
+:root[data-theme="matrix"] {
+    --bg-page: #000000;
+    --bg-card: #0a0a0a;
+    --bg-card-hover: #111111;
+    --bg-input: #000000;
+    --text-main: #00ff00;
+    --text-muted: #008f00;
+    --text-highlight: #ccffcc;
+    --accent-primary: #00ff00;
+    --accent-success: #00ff00;
+    --accent-warn: #ffff00;
+    --border-color: #003300;
+    --shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+    --map-bg: #000000;
+    --map-area: #003300;
+    --map-light: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* =========================================
+   2. 基础布局
+   ========================================= */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
 
 body {
-    background-color: #1e1e24;
-    color: #ffffff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    font-family: 'Segoe UI', sans-serif;
     padding: 20px;
     line-height: 1.6;
+    padding-top: 60px;
+    padding-bottom: 50px;
 }
 
-/* Header 样式 */
+/* 顶部栏 */
+#top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 999;
+}
+
+.logo {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--accent-primary);
+}
+
+#theme-selector {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-page);
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+/* Header & Map */
 #header {
     text-align: center;
     margin-bottom: 40px;
-    padding-top: 20px;
+    max-width: 800px;
+    margin: 0 auto 40px auto;
 }
 
 #header h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    font-size: 2rem;
+    margin: 20px 0;
     letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
-/* Quest List 容器 */
+#map-container {
+    width: 100%;
+    height: 300px;
+    background-color: var(--map-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-tool {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-tool.active {
+    background: var(--accent-primary);
+    color: #fff;
+    border-color: var(--accent-primary);
+}
+
+#countdown-display {
+    font-size: 1.1rem;
+    color: var(--accent-primary);
+    font-weight: bold;
+}
+
+/* =========================================
+   3. 任务卡片
+   ========================================= */
 #quest-list {
     max-width: 600px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
 }
 
-/* 卡片基础样式 (.card) */
 .card {
-    position: relative;
-    /* 为了给锁图标定位 */
-    background-color: #2d2d3a;
+    background-color: var(--bg-card);
     border-radius: 12px;
     padding: 20px;
-    border-left: 6px solid #5c5c79;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 6px solid var(--border-color);
+    box-shadow: var(--shadow);
+    position: relative;
     cursor: pointer;
 }
 
 .card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
-    background-color: #343442;
+    background-color: var(--bg-card-hover);
 }
 
-/* 内部文本样式 */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
 .quest-date {
     font-size: 0.85rem;
-    color: #8f90a2;
-    margin-bottom: 4px;
+    color: var(--text-muted);
+}
+
+.weather-badge {
+    font-size: 0.85rem;
+    background: rgba(128, 128, 128, 0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: var(--accent-primary);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.weather-badge.loaded {
+    opacity: 1;
 }
 
 .quest-city {
     font-size: 0.9rem;
     font-weight: bold;
-    color: #4db8ff;
-    margin-bottom: 8px;
+    color: var(--accent-primary);
     text-transform: uppercase;
 }
 
 .quest-title {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.quest-desc {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-base {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
 }
 
-/* --- 已完成任务样式 (.done) --- */
-.done {
-    border-left-color: #4cd964;
-    opacity: 0.6;
+.map-btn {
+    background-color: var(--accent-primary);
 }
 
-.done .quest-title {
-    text-decoration: line-through;
-    color: #aaa;
+.check-btn {
+    background-color: var(--accent-success);
 }
 
-/* --- 锁定任务样式 (.locked) --- */
-.locked {
-    /* 背景更深，甚至接近黑色，营造未探索感 */
-    background-color: #16161a;
-    /* 边框变暗灰 */
-    border-left-color: #333;
-    /* 整体稍微透明一点 */
+.check-btn.is-checked {
+    background-color: var(--border-color);
+}
+
+.card.done {
+    border-left-color: var(--accent-success);
     opacity: 0.8;
-    /* 鼠标变成禁止符号 */
+}
+
+.card.done .quest-title {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.card.locked {
+    background-color: var(--bg-locked);
     cursor: not-allowed;
-    /* 文字颜色变暗 */
-    color: #777;
+    border-left-color: #333;
+    color: var(--text-locked);
 }
 
-/* 锁定状态下的 hover：不要上浮，也不要变亮，保持死寂 */
-.locked:hover {
-    transform: none;
-    background-color: #16161a;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-/* 锁定状态下的城市和日期颜色也变暗，不再高亮 */
-.locked .quest-city,
-.locked .quest-date {
-    color: #555;
-}
-
-/* 使用伪元素添加一个锁的图标 */
-.locked::after {
+.card.locked::after {
     content: "🔒";
     position: absolute;
     top: 20px;
     right: 20px;
     font-size: 1.5rem;
-    opacity: 0.5;
+    opacity: 0.3;
     filter: grayscale(100%);
 }
 
-/* --- 地图导航按钮样式 --- */
-.map-btn {
-    display: inline-block;
-    background-color: #007aff;
-    /* 科技蓝 */
-    color: white;
-    text-decoration: none;
-    padding: 6px 16px;
-    border-radius: 20px;
-    /* 胶囊形状 */
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: background-color 0.2s, transform 0.1s;
-    box-shadow: 0 2px 4px rgba(0, 122, 255, 0.3);
+/* =========================================
+   4. 评论区样式 (新增)
+   ========================================= */
+#comment-section {
+    max-width: 600px;
+    margin: 40px auto 0 auto;
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
 }
 
-.map-btn:hover {
-    background-color: #0062cc;
-    /* 悬停变深 */
-    transform: scale(1.05);
-    /* 轻微放大 */
+#comment-section h3 {
+    margin-bottom: 15px;
+    color: var(--accent-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
 }
 
-.map-btn:active {
-    transform: scale(0.95);
-    /* 点击回缩感 */
+#comment-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    padding-right: 5px;
 }
 
-/* 已完成任务里的按钮也可以变灰一点，或者保持原样，这里保持原样以方便查看 */
-/* --- 调试按钮样式 --- */
-#debug-btn {
-    background-color: #444;
-    color: #fff;
-    border: 1px solid #666;
-    padding: 5px 12px;
-    margin-top: 10px;
-    border-radius: 4px;
-    cursor: pointer;
+.empty-tip {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+.comment-item {
+    background: var(--bg-input);
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
     font-size: 0.8rem;
-    transition: all 0.2s;
+    margin-bottom: 4px;
 }
 
-/* 当调试模式开启时，按钮变亮 */
-#debug-btn.active {
-    background-color: #28a745;
-    /* 绿色 */
-    border-color: #28a745;
+.comment-user {
+    font-weight: bold;
+    color: var(--accent-success);
+}
+
+.comment-time {
+    color: var(--text-muted);
+}
+
+.comment-content {
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.comment-form {
+    display: flex;
+    gap: 10px;
+}
+
+#comment-name {
+    width: 25%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-main);
+}
+
+#comment-input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-main);
+}
+
+#send-comment-btn {
+    background-color: var(--accent-primary);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 6px;
+    cursor: pointer;
     font-weight: bold;
 }
 
-/* --- 按钮容器：让地图和打卡按钮并排 --- */
-.action-buttons {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-    /* 按钮之间的间距 */
+#send-comment-btn:hover {
+    opacity: 0.8;
 }
 
-/* --- 打卡按钮样式 --- */
-.check-btn {
-    display: inline-block;
-    background-color: #28a745;
-    /* 绿色 */
-    color: white;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.check-btn:hover {
-    background-color: #218838;
-    transform: scale(1.05);
-}
-
-.check-btn:active {
-    transform: scale(0.95);
-}
-
-/* 当任务已完成时的按钮样式（变为撤销状态） */
-.check-btn.is-checked {
-    background-color: #6c757d;
-    /* 灰色 */
-    box-shadow: none;
-}
-
-/* --- 模态框 (Modal) 样式 --- */
+/* =========================================
+   5. 模态框
+   ========================================= */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    /* 深黑遮罩 */
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
     opacity: 0;
     pointer-events: none;
-    /* 隐藏时不可点击 */
-    transition: opacity 0.3s ease;
-    backdrop-filter: blur(5px);
-    /* 背景模糊效果 */
+    transition: opacity 0.3s;
 }
 
-/* 激活状态 */
 .modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
 }
 
-/* 内容容器 */
 .modal-content {
-    background-color: #2d2d3a;
+    background: var(--bg-card);
     width: 90%;
     max-width: 500px;
-    max-height: 80vh;
-    /* 防止内容太长溢出屏幕 */
-    overflow-y: auto;
-    /* 内容过长可滚动 */
     padding: 25px;
     border-radius: 16px;
-    border: 1px solid #4db8ff;
-    /* 边框高亮，更有科技感 */
-    box-shadow: 0 0 20px rgba(77, 184, 255, 0.2);
-    position: relative;
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     transform: scale(0.9);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.3s;
+    color: var(--text-main);
 }
 
 .modal-overlay.active .modal-content {
     transform: scale(1);
 }
 
-/* 标题和正文 */
 #modal-title {
-    color: #4db8ff;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #444;
+    color: var(--accent-primary);
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-#modal-body {
-    color: #e0e0e0;
-    line-height: 1.8;
-    white-space: pre-wrap;
-    /* 保留换行符 */
-    font-size: 0.95rem;
-}
-
-/* 关闭按钮 */
 .close-btn {
     position: absolute;
     top: 15px;
     right: 20px;
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
+    font-size: 24px;
     cursor: pointer;
-    transition: color 0.2s;
-}
-
-.close-btn:hover {
-    color: #fff;
+    color: var(--text-muted);
 }

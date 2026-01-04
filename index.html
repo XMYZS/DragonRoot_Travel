@@ -1,25 +1,56 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="default">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旅行攻略</title>
+    <title>旅行攻略 Pro</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
+    <div id="top-bar">
+        <div class="logo">🚀 旅途 OS</div>
+        <div class="controls">
+            <select id="theme-selector">
+                <option value="default">🌃 赛博夜行 (默认)</option>
+                <option value="light">🌸 日系晴空</option>
+                <option value="matrix">💻 黑客帝国</option>
+            </select>
+        </div>
+    </div>
+
     <div id="header">
-        <h1>旅行攻略</h1>
-        <button id="debug-btn" onclick="toggleDebug()">🛠️ 调试模式: 关</button>
+        <h1>HUNAN TRAVEL GUIDE</h1>
+
+        <div id="map-container"></div>
+
+        <div id="countdown-display"></div>
+
+        <div class="toolbar">
+            <button id="bgm-btn" class="btn-tool"><i class="fa-solid fa-music"></i> BGM</button>
+            <button id="debug-btn" class="btn-tool"><i class="fa-solid fa-wrench"></i> 调试</button>
+        </div>
     </div>
 
     <div id="quest-list"></div>
 
-    <div id="modal" class="modal-overlay" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <span class="close-btn" onclick="closeModal(event)">&times;</span>
+    <div id="comment-section" style="margin-top: 40px; border: 1px solid #555; padding: 20px; border-radius: 10px;">
+        <h3 style="color: #4db8ff; margin-bottom: 10px;">💬 评论区测试</h3>
+        <div id="comment-list" style="margin-bottom: 10px; min-height: 50px;"></div>
+        <div style="display: flex; gap: 5px;">
+            <input id="comment-name" placeholder="名字" style="width: 20%;">
+            <input id="comment-input" placeholder="内容" style="flex: 1;">
+            <button id="send-comment-btn" onclick="CommentController.add()">发送</button>
+        </div>
+    </div>
+
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
             <h2 id="modal-title">攻略标题</h2>
             <div id="modal-body">攻略内容...</div>
         </div>

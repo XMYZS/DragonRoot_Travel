@@ -1,222 +1,356 @@
-// --- 1. 全局变量与配置 ---
-let isDebugMode = false; // 调试模式开关
+// ==========================================
+// 1. 全局配置与状态
+// ==========================================
+const AppState = {
+    isDebugMode: false,
+    isBgmPlaying: false,
+    completedIds: JSON.parse(localStorage.getItem('completedQuestIds')) || [],
+    currentTheme: localStorage.getItem('theme') || 'default'
+};
 
-// --- 新增：初始化读取存档 ---
-// 尝试从 LocalStorage 获取已完成的任务ID数组，如果没有则为空数组
-let completedQuestIds = JSON.parse(localStorage.getItem('completedQuestIds')) || [];
+const DOM = {
+    questList: document.getElementById('quest-list'),
+    debugBtn: document.getElementById('debug-btn'),
+    bgmBtn: document.getElementById('bgm-btn'),
+    countdown: document.getElementById('countdown-display'),
+    modal: document.getElementById('modal'),
+    modalTitle: document.getElementById('modal-title'),
+    modalBody: document.getElementById('modal-body'),
+    themeSelect: document.getElementById('theme-selector'),
+    mapContainer: document.getElementById('map-container'),
+    // 新增评论DOM
+    commentList: document.getElementById('comment-list'),
+    commentInput: document.getElementById('comment-input'),
+    commentName: document.getElementById('comment-name')
+};
 
-// --- 2. 数据定义 ---
+// ==========================================
+// 2. 音频系统
+// ==========================================
+const AudioResources = {
+    ding: new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'),
+    engine: new Audio('https://assets.mixkit.co/active_storage/sfx/2604/2604-preview.mp3'),
+    bgm: new Audio('https://assets.mixkit.co/active_storage/sfx/134/134-preview.mp3')
+};
+AudioResources.bgm.loop = true;
+AudioResources.bgm.volume = 0.3;
+
+function playAudio(key) {
+    const sound = AudioResources[key];
+    if (sound) {
+        if (key !== 'bgm') sound.currentTime = 0;
+        sound.play().catch(() => { });
+    }
+}
+
+// ==========================================
+// 3. 数据定义
+// ==========================================
 const quests = [
     {
-        id: 1,
-        date: "2026-01-15",
-        displayDate: "1月15日 - 1月17日",
-        city: "长沙 (第一章)",
-        title: "星城探秘",
-        desc: "<b>Day 1:</b> 抵达五一广场，茶颜悦色 & 口味虾。<br><b>Day 2:</b> 岳麓山爬山，橘子洲头打卡。<br><b>Day 3:</b> 湖南省博看辛追夫人。",
+        id: 1, date: "2026-01-15", displayDate: "1.15 - 1.17", city: "长沙",
+        lat: 28.2282, lon: 112.9388, mapX: 300, mapY: 450,
+        title: "星城探秘", desc: "Day 1-3: 五一广场 / 岳麓山 / 省博",
         mapUrl: "https://www.amap.com/search?query=长沙五一广场",
-        // 新增：详细攻略
-        guide: "【美食密函】\n1. 茶颜悦色：别只喝幽兰拿铁，试试'声声乌龙'。\n2. 笨萝卜浏阳菜馆：排队很恐怖，建议下午4点就去取号。\n3. 黑色经典臭豆腐：五一广场随处可见，趁热吃。\n\n【避坑指南】\n岳麓山不想爬可以坐索道，但下山建议滑道（排队久的话就算了）。省博一定要提前7天定闹钟约票！"
+        guide: "【美食】茶颜悦色、笨萝卜、黑色经典。\n【避坑】岳麓山滑道排队久就别坐了。"
     },
     {
-        id: 2,
-        date: "2026-01-18",
-        displayDate: "1月18日 - 1月19日",
-        city: "岳阳 & 咸宁 (过渡篇)",
-        title: "江湖与温泉",
-        desc: "<b>Day 4:</b> 上午高铁去岳阳楼看洞庭湖，下午转场咸宁。<br><b>Day 5:</b> 咸宁全天泡温泉，晚间抵达武汉。",
+        id: 2, date: "2026-01-18", displayDate: "1.18 - 1.19", city: "岳阳 & 咸宁",
+        lat: 29.3770, lon: 113.1197, mapX: 350, mapY: 350,
+        title: "江湖与温泉", desc: "Day 4-5: 岳阳楼 / 咸宁泡温泉",
         mapUrl: "https://www.amap.com/search?query=岳阳楼",
-        guide: "【行路难】\n岳阳楼背诵《岳阳楼记》在某些节假日可以免票，你可以试试背一下。\n\n【温泉Tips】\n咸宁温泉很多，碧桂园或三江森林都不错。记得带个手机防水袋，泡温泉的时候刷手机很爽，但小心掉水里。"
+        guide: "【岳阳】背诵《岳阳楼记》免票。\n【咸宁】泡温泉记得带手机防水袋。"
     },
     {
-        id: 3,
-        date: "2026-01-20",
-        displayDate: "1月20日 - 1月24日",
-        city: "武汉 (高潮篇)",
-        title: "江城深度游",
-        desc: "<b>Day 6:</b> 黄鹤楼 & 长江大桥。<br><b>Day 7:</b> 湖北省博。<br><b>Day 8:</b> 东湖磨山。<br><b>Day 9:</b> 江汉路 & 轮渡。<br><b>Day 10:</b> 粮道街过早。",
+        id: 3, date: "2026-01-20", displayDate: "1.20 - 1.24", city: "武汉",
+        lat: 30.5928, lon: 114.3055, mapX: 400, mapY: 250,
+        title: "江城深度游", desc: "Day 6-10: 黄鹤楼 / 省博 / 轮渡",
         mapUrl: "https://www.amap.com/search?query=武汉黄鹤楼",
-        guide: "【过早文化】\n一定要试：热干面（加醋！）、三鲜豆皮、面窝、糊汤粉。\n\n【特种兵路线】\n黄鹤楼其实在外面拍个照就行，没必要一定要上去挤。反而长江大桥一定要走一走，晚上吹江风很舒服。\n\n【轮渡】\n去中华路码头坐轮渡到武汉关，只要1.5元，比几百块的游船香多了，记得抢二楼甲板位置。"
+        guide: "【过早】热干面要加醋。\n【轮渡】1.5元坐船过江，性价比超高。"
     },
     {
-        id: 4,
-        date: "2026-01-25",
-        displayDate: "1月25日",
-        city: "返程",
-        title: "满载而归",
-        desc: "整理行李与特产，前往天河机场/火车站，返回温暖的家。",
+        id: 4, date: "2026-01-25", displayDate: "1.25", city: "返程",
+        lat: 30.7838, lon: 114.2081, mapX: 450, mapY: 150,
+        title: "满载而归", desc: "整理行李，前往天河机场。",
         mapUrl: "https://www.amap.com/search?query=武汉天河机场",
-        guide: "【伴手礼】\n周黑鸭到处都有，可以去菜市场买点现卤的鸭脖。\n检查身份证、充电器有没有落在酒店。旅途结束，期待下一次出发！"
+        guide: "检查身份证、充电器，带点周黑鸭回家。"
     }
 ];
 
-// --- 3. 核心功能：切换打卡状态并存档 ---
+// ==========================================
+// 4. 功能模块
+// ==========================================
+
+// --- A. 主题切换模块 ---
+function initTheme() {
+    document.documentElement.setAttribute('data-theme', AppState.currentTheme);
+    DOM.themeSelect.value = AppState.currentTheme;
+}
+function switchTheme(themeName) {
+    AppState.currentTheme = themeName;
+    localStorage.setItem('theme', themeName);
+    document.documentElement.setAttribute('data-theme', themeName);
+    MapController.render();
+}
+
+// --- B. 评论系统 (替换了 Travel Journal) ---
+const CommentController = {
+    // 获取评论
+    getAll: () => JSON.parse(localStorage.getItem('siteComments')) || [],
+
+    // 初始化渲染
+    init: () => {
+        CommentController.render();
+        // 绑定回车发送
+        DOM.commentInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') CommentController.add();
+        });
+    },
+
+    // 渲染评论列表
+    render: () => {
+        const comments = CommentController.getAll();
+        if (comments.length === 0) {
+            DOM.commentList.innerHTML = '<div class="empty-tip">还没有评论，快来抢沙发！</div>';
+            return;
+        }
+
+        DOM.commentList.innerHTML = comments.map(c => `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-user">${c.user}</span>
+                    <span class="comment-time">${c.time}</span>
+                </div>
+                <div class="comment-content">${c.content}</div>
+            </div>
+        `).join('');
+
+        // 滚动到底部
+        DOM.commentList.scrollTop = DOM.commentList.scrollHeight;
+    },
+
+    // 添加评论
+    add: () => {
+        const user = DOM.commentName.value.trim() || "匿名旅人";
+        const content = DOM.commentInput.value.trim();
+
+        if (!content) return alert("写点什么再发送吧！");
+
+        const newComment = {
+            user: user,
+            content: content,
+            time: new Date().toLocaleString()
+        };
+
+        const comments = CommentController.getAll();
+        comments.push(newComment);
+        localStorage.setItem('siteComments', JSON.stringify(comments));
+
+        // 清空输入框并重绘
+        DOM.commentInput.value = '';
+        CommentController.render();
+        playAudio('ding'); // 发送成功提示音
+    }
+};
+
+// --- C. 足迹地图模块 ---
+const MapController = {
+    chart: null,
+    init: () => {
+        if (!MapController.chart) {
+            MapController.chart = echarts.init(DOM.mapContainer);
+        }
+        MapController.render();
+        window.addEventListener('resize', () => MapController.chart.resize());
+    },
+    render: () => {
+        if (!MapController.chart) return;
+        const style = getComputedStyle(document.body);
+        const colorPrimary = style.getPropertyValue('--accent-primary').trim();
+        const colorSuccess = style.getPropertyValue('--accent-success').trim();
+        const colorText = style.getPropertyValue('--text-muted').trim();
+
+        const data = quests.map(q => {
+            const isDone = AppState.completedIds.includes(q.id);
+            return {
+                name: q.city, x: q.mapX, y: q.mapY, symbolSize: isDone ? 20 : 10,
+                itemStyle: { color: isDone ? colorSuccess : colorPrimary, shadowBlur: isDone ? 10 : 0, shadowColor: colorSuccess },
+                label: { show: true, position: 'right', color: isDone ? colorSuccess : colorText, formatter: `{b}\n${q.displayDate}` }
+            };
+        });
+
+        const links = [];
+        for (let i = 0; i < quests.length - 1; i++) {
+            const isPathActive = AppState.completedIds.includes(quests[i].id);
+            links.push({
+                source: quests[i].city, target: quests[i + 1].city,
+                lineStyle: { color: isPathActive ? colorSuccess : colorText, width: isPathActive ? 3 : 1, type: isPathActive ? 'solid' : 'dashed', curveness: 0.2 }
+            });
+        }
+
+        const option = {
+            backgroundColor: 'transparent',
+            title: { text: '🗺️ 征服版图', left: 'center', top: 10, textStyle: { color: colorText, fontSize: 14 } },
+            grid: { top: 40, bottom: 20, left: 20, right: 20 },
+            xAxis: { show: false, min: 200, max: 550 },
+            yAxis: { show: false, min: 100, max: 500 },
+            series: [{ type: 'graph', layout: 'none', data: data, links: links, symbol: 'circle', animationDuration: 1000 }]
+        };
+        MapController.chart.setOption(option);
+    }
+};
+
+// ==========================================
+// 5. 核心交互逻辑
+// ==========================================
 function toggleQuestStatus(questId) {
-    // 检查 ID 是否已存在于数组中
-    const index = completedQuestIds.indexOf(questId);
-
+    const index = AppState.completedIds.indexOf(questId);
     if (index > -1) {
-        // 如果存在，说明用户想“取消完成” -> 从数组移除
-        completedQuestIds.splice(index, 1);
+        AppState.completedIds.splice(index, 1);
     } else {
-        // 如果不存在，说明用户想“标记完成” -> 加入数组
-        completedQuestIds.push(questId);
+        AppState.completedIds.push(questId);
+        playAudio('ding');
     }
-
-    // 重点：保存回 localStorage
-    localStorage.setItem('completedQuestIds', JSON.stringify(completedQuestIds));
-
-    // 重新渲染页面，更新视图
+    localStorage.setItem('completedQuestIds', JSON.stringify(AppState.completedIds));
     renderQuests();
+    MapController.render();
 }
 
-// --- 4. 调试功能 ---
+function toggleBGM() {
+    AppState.isBgmPlaying = !AppState.isBgmPlaying;
+    const btn = DOM.bgmBtn;
+    if (AppState.isBgmPlaying) {
+        playAudio('bgm');
+        btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> BGM: 开';
+        btn.classList.add('active');
+    } else {
+        AudioResources.bgm.pause();
+        btn.innerHTML = '<i class="fa-solid fa-music"></i> BGM: 关';
+        btn.classList.remove('active');
+    }
+}
+
 function toggleDebug() {
-    isDebugMode = !isDebugMode;
-    const btn = document.getElementById('debug-btn');
-    if (btn) {
-        if (isDebugMode) {
-            btn.textContent = "🛠️ 调试模式: 开 (全解锁)";
-            btn.classList.add('active');
-        } else {
-            btn.textContent = "🛠️ 调试模式: 关";
-            btn.classList.remove('active');
-        }
+    AppState.isDebugMode = !AppState.isDebugMode;
+    const btn = DOM.debugBtn;
+    if (AppState.isDebugMode) {
+        btn.innerHTML = '<i class="fa-solid fa-unlock"></i> 全解锁';
+        btn.classList.add('active');
+    } else {
+        btn.innerHTML = '<i class="fa-solid fa-wrench"></i> 调试';
+        btn.classList.remove('active');
     }
     renderQuests();
 }
 
-// --- 5. 倒计时功能 ---
-function updateCountdown() {
-    const header = document.getElementById('header');
-    const targetDate = new Date("2026-01-15T00:00:00");
-    const now = new Date();
-    const diff = targetDate - now;
-
-    let countdownDiv = document.getElementById('countdown-display');
-    if (!countdownDiv) {
-        countdownDiv = document.createElement('div');
-        countdownDiv.id = 'countdown-display';
-        countdownDiv.style.fontSize = "1.2rem";
-        countdownDiv.style.color = "#4db8ff";
-        countdownDiv.style.marginTop = "10px";
-        header.appendChild(countdownDiv);
-    }
-
-    if (diff <= 0) {
-        countdownDiv.innerHTML = "旅程进行中！";
-        return;
-    }
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    countdownDiv.innerHTML = `距离出发还有：${days} 天 ${hours} 小时`;
+// ==========================================
+// 6. 渲染与天气
+// ==========================================
+function getWeatherEmoji(code) {
+    if (code === 0) return "☀️";
+    if (code >= 1 && code <= 3) return "⛅";
+    if (code >= 51 && code <= 67) return "🌧️";
+    return "🌡️";
 }
 
-// --- 6. 渲染列表功能 ---
+async function fetchWeather(questId, lat, lon) {
+    const el = document.getElementById(`weather-${questId}`);
+    if (!el) return;
+    try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        const data = await res.json();
+        const w = data.current_weather;
+        el.innerHTML = `${getWeatherEmoji(w.weathercode)} ${w.temperature}°C`;
+        el.classList.add('loaded');
+    } catch (e) { el.innerHTML = "📡 无信号"; }
+}
+
 function renderQuests() {
-    const listContainer = document.getElementById('quest-list');
-    if (!listContainer) return;
-
-    listContainer.innerHTML = '';
-
+    DOM.questList.innerHTML = '';
     const now = new Date();
 
-    quests.forEach(quest => {
+    quests.forEach(q => {
+        const card = document.createElement('div');
+        card.className = 'card';
 
-        const cardDiv = document.createElement('div');
-        cardDiv.classList.add('card');
+        const isDone = AppState.completedIds.includes(q.id);
+        const isFuture = new Date(q.date + "T00:00:00") > now;
+        const isLocked = isFuture && !AppState.isDebugMode && !isDone;
 
-        // --- 状态判断逻辑 ---
+        if (isDone) card.classList.add('done');
+        if (isLocked) card.classList.add('locked');
 
-        // 1. 检查是否在存档中
-        const isCompleted = completedQuestIds.includes(quest.id);
+        // --- 核心 HTML 生成 ---
+        const weatherHtml = (q.lat && !isLocked) ? `<span id="weather-${q.id}" class="weather-badge">⌛</span>` : '';
 
-        // 2. 检查时间锁定
-        const questDate = new Date(quest.date + "T00:00:00");
-        let isLocked = questDate > now;
+        // 移除了 Journal (手记) 生成代码
 
-        // 调试模式或已完成状态下，强制解锁
-        if (isDebugMode || isCompleted) {
-            isLocked = false;
-        }
-
-        // --- 样式应用 ---
-        if (isCompleted) {
-            cardDiv.classList.add('done');
-        }
-        if (isLocked) {
-            cardDiv.classList.add('locked');
-        }
-
-        const displayDesc = isLocked ? "??? 尚未解锁" : quest.desc;
-        const mapLink = quest.mapUrl ? quest.mapUrl : '#';
-
-        // --- 按钮生成逻辑 ---
-        let buttonsHtml = '';
-
+        // 按钮 HTML
+        let btnHtml = '';
         if (!isLocked) {
-            // 只有解锁状态才显示按钮
-            const btnText = isCompleted ? "↩️ 撤销" : "✅ 打卡";
-            const btnClass = isCompleted ? "check-btn is-checked" : "check-btn";
-
-            buttonsHtml = `
+            btnHtml = `
                 <div class="action-buttons">
-                    <a href="${mapLink}" target="_blank" class="map-btn" onclick="event.stopPropagation()">📍 导航</a>
-                    <button class="${btnClass}" onclick="toggleQuestStatus(${quest.id}); event.stopPropagation()">
-                        ${btnText}
+                    <a href="${q.mapUrl}" target="_blank" class="btn-base map-btn" onclick="playAudio('engine'); event.stopPropagation()">
+                        <i class="fa-solid fa-location-arrow"></i> 导航
+                    </a>
+                    <button class="btn-base check-btn ${isDone ? 'is-checked' : ''}" onclick="toggleQuestStatus(${q.id}); event.stopPropagation()">
+                        ${isDone ? '<i class="fa-solid fa-rotate-left"></i> 撤销' : '<i class="fa-solid fa-check"></i> 打卡'}
                     </button>
                 </div>
             `;
+            card.onclick = () => openModal(q.id);
         }
-        if (!isLocked) {
-            cardDiv.onclick = function () {
-                openModal(quest.id);
-            };
-            // 增加一个提示性的 title 属性
-            cardDiv.title = "点击查看详细攻略";
-        }
-        // ... 前面的代码不变 ...
 
-        cardDiv.innerHTML = `
-            <div class="quest-date">${quest.displayDate || quest.date}</div>
-            
-            <div class="quest-city">📍 ${quest.city}</div>
-            <div class="quest-title">${quest.title}</div>
-            <div class="quest-desc" style="margin-top:8px; font-size:0.9rem; color:#ccc;">${displayDesc}</div>
-            ${buttonsHtml}
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="quest-date">${q.displayDate}</span>
+                ${weatherHtml}
+            </div>
+            <div class="quest-city">📍 ${q.city}</div>
+            <div class="quest-title">${q.title}</div>
+            <div class="quest-desc">${isLocked ? "??? 尚未解锁" : q.desc}</div>
+            ${btnHtml}
         `;
 
-        listContainer.appendChild(cardDiv);
+        DOM.questList.appendChild(card);
+        if (q.lat && !isLocked) fetchWeather(q.id, q.lat, q.lon);
     });
 }
 
-// --- 7. 初始化 ---
-renderQuests();
-updateCountdown();
-setInterval(updateCountdown, 1000 * 60 * 60);
-
-// --- 8. 模态框功能 ---
-function openModal(questId) {
-    const quest = quests.find(q => q.id === questId);
-    if (!quest) return;
-
-    // 填充内容
-    document.getElementById('modal-title').innerText = quest.title;
-    document.getElementById('modal-body').innerText = quest.guide || "暂无详细攻略";
-
-    // 显示模态框
-    document.getElementById('modal').classList.add('active');
-}
-
-function closeModal(event) {
-    // 隐藏模态框
-    document.getElementById('modal').classList.remove('active');
-}
-
-// 增加 ESC 键关闭功能，提升体验
-document.addEventListener('keydown', function (event) {
-    if (event.key === "Escape") {
-        closeModal();
+// 模态框逻辑
+function openModal(id) {
+    const q = quests.find(x => x.id === id);
+    if (q) {
+        DOM.modalTitle.innerText = q.title;
+        DOM.modalBody.innerText = q.guide;
+        DOM.modal.classList.add('active');
     }
-});
+}
+function closeModal() { DOM.modal.classList.remove('active'); }
+DOM.modal.onclick = (e) => { if (e.target === DOM.modal) closeModal(); };
+document.querySelector('.close-btn').onclick = closeModal;
+
+// 倒计时
+function updateCountdown() {
+    const diff = new Date("2026-01-15T00:00:00") - new Date();
+    if (diff <= 0) { DOM.countdown.innerText = "🎉 旅程进行中！"; return; }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    DOM.countdown.innerText = `⏳ 距离出发: ${d}天 ${h}小时`;
+}
+
+// ==========================================
+// 7. 初始化
+// ==========================================
+DOM.bgmBtn.onclick = toggleBGM;
+DOM.debugBtn.onclick = toggleDebug;
+DOM.themeSelect.addEventListener('change', (e) => switchTheme(e.target.value));
+document.addEventListener('keydown', e => { if (e.key === "Escape") closeModal(); });
+
+// 启动
+initTheme();
+renderQuests();
+MapController.init();
+CommentController.init(); // 启动评论系统
+updateCountdown();
+setInterval(updateCountdown, 3600000);
